@@ -34,8 +34,10 @@ connection.end();
 
 app.get("/", (req, res) => {
   const htmlResult =
-    `<h1>Full Cycle Rocks!</h1>` +
-    names.map((name) => `<p>${name}</p>`).join("");
+    `<h1>Full Cycle Rocks!</h1>
+    <ul>` +
+    names.map((name) => `<li>${name}</li>`).join("") +
+    `</ul>`;
   res.send(htmlResult);
 });
 
