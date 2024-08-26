@@ -1,17 +1,42 @@
 version: '3'
 
 services:
-  app:
-    image: node:22-slim
-    container_name: node-app
+  db:
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile
+    container_name: db-mysql
+    command: --innodb-use-native-aio=0
     tty: true
     restart: always
     volumes:
-      - ./node:/usr/src/app
-    working_dir: /usr/src/app
-    command: node index.js
+      - ./mysql/data:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=challengedb
+      - MYSQL_ROOT_PASSWORD=root
     networks:
       - challenge
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD" ]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+  app:
+    build:
+      context: ./node
+      dockerfile: Dockerfile
+    container_name: node-app
+    restart: always
+    tty: true
+    volumes:
+      - ./node:/usr/src/app
+    networks:
+      - challenge
+    environment:
+      - DB_HOST=db-mysql
+      - DB_NAME=challengedb
+      - DB_USER=root
+      - DB_PASSWORD=root
     depends_on:
       db:
         condition: service_healthy
@@ -30,24 +55,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-  db:
-    image: mysql:5.7
-    command: --innodb-use-native-aio=0
-    container_name: db-mysql
-    tty: true
-    restart: always
-    volumes:
-      - ./mysql:/var/lib/mysql
-    environment:
-      - MYSQL_DATABASE=challengedb
-      - MYSQL_ROOT_PASSWORD=root
-    networks:
-      - challenge
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD" ]
-      interval: 5s
-      timeout: 10s
-      retries: 3
 
 networks:
   challenge:
