@@ -4,10 +4,10 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-EXPOSE 3000
-
 RUN npm install
 
-COPY . .
+EXPOSE 3000
+
+COPY index.js .
 
 CMD [ "node", "index.js" ]
